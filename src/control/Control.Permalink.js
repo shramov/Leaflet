@@ -1,5 +1,10 @@
 L.Control.Permalink = L.Class.extend({
-	initialize: function() {
+	options: {
+		position: L.Control.Position.BOTTOM_LEFT,
+	},
+
+	initialize: function(options) {
+		L.Util.setOptions(this, options);
 		this._set_urlvars();
 		this._centered = false;
 	},
@@ -16,7 +21,7 @@ L.Control.Permalink = L.Class.extend({
 	},
 
 	getPosition: function() {
-		return L.Control.Position.BOTTOM_LEFT;
+		return this.options.position;
 	},
 
 	getContainer: function() {
