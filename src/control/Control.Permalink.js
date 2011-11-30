@@ -1,6 +1,7 @@
 L.Control.Permalink = L.Class.extend({
 	options: {
 		position: L.Control.Position.BOTTOM_LEFT,
+		useAnchor: true
 	},
 
 	initialize: function(options) {
@@ -37,13 +38,10 @@ L.Control.Permalink = L.Class.extend({
 		this._params['lat'] = center.lat;
 		this._params['lon'] = center.lng;
 
-		var url = [];
-		for (var i in this._params) {
-			if (this._params.hasOwnProperty(i))
-				url.push(i + "=" + this._params[i]);
-		}
-
-		this._href.setAttribute('href', this._url_base + "?" + url.join('&'));
+		var params = L.Util.getParamString(this._params);
+		var sep = '?';
+		if (this.options.useAnchor) sep = '#';
+		this._href.setAttribute('href', this._url_base + sep + params.slice(1))
 	},
 
 	_round_point : function(point) {
@@ -67,19 +65,29 @@ L.Control.Permalink = L.Class.extend({
 
 	_set_urlvars: function()
 	{
-		this._params = {};
-		var idx = window.location.href.indexOf('?');
-		if (idx < 0) {
-			this._url_base = window.location.href;
+		this._url_base = window.location.href.split('#')[0];
+		this._params = this._parse_urlvars(window.location.hash.slice(1));
+		if (this._params.lat && this._params.lon && this._params.zoom)
 			return;
-		}
-		var params = window.location.href.slice(idx + 1).split('&');
+
+		var idx = this._url_base.indexOf('?');
+		if (idx < 0)
+			return;
+
+		this._params = this._parse_urlvars(this._url_base.slice(idx + 1));
+		this._url_base = this._url_base.substring(0, idx);
+	},
+
+	_parse_urlvars: function(s) {
+		var p = {};
+		var params = s.split('&');
 		for(var i = 0; i < params.length; i++) {
 			var tmp = params[i].split('=');
-			this._params[tmp[0]] = tmp[1];
+			if (tmp.length != 2) continue;
+			p[tmp[0]] = tmp[1];
 		}
-		this._url_base = window.location.href.substring(0, idx);
-	}, 
+		return p;
+	},
 
 	_set_center: function(params)
 	{
