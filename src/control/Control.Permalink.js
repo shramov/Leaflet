@@ -4,21 +4,25 @@ L.Control.Permalink = L.Class.extend({
 		useAnchor: true
 	},
 
-	initialize: function(options) {
+	initialize: function(layers, options) {
 		L.Util.setOptions(this, options);
 		this._set_urlvars();
 		this._centered = false;
+		this._layers = layers;
 	},
 
 	onAdd: function(map) {
 		this._container = L.DomUtil.create('div', 'leaflet-control-attribution');
 		L.DomEvent.disableClickPropagation(this._container);
-		map.on('moveend', this._update, this);
+		map.on('moveend', this._update_center, this);
+		map.on('layeradd', this._update_layers, this);
+		map.on('layerremove', this._update_layers, this);
 		this._map = map;
 		this._href = L.DomUtil.create('a', null, this._container);
 		this._href.innerHTML = "Permalink";
 		this._set_center(this._params);
-		this._update();
+		this._update_layers();
+		this._update_center();
 	},
 
 	getPosition: function() {
@@ -29,7 +33,7 @@ L.Control.Permalink = L.Class.extend({
 		return this._container;
 	},
 
-	_update: function() {
+	_update_center: function() {
 		if (!this._map) return;
 
 		var center = this._map.getCenter();
@@ -37,11 +41,22 @@ L.Control.Permalink = L.Class.extend({
 		this._params['zoom'] = this._map.getZoom();
 		this._params['lat'] = center.lat;
 		this._params['lon'] = center.lng;
+		this._update_href();
+	},
 
+	_update_href: function() {
 		var params = L.Util.getParamString(this._params);
 		var sep = '?';
 		if (this.options.useAnchor) sep = '#';
 		this._href.setAttribute('href', this._url_base + sep + params.slice(1))
+	},
+
+	_update_layers: function() {
+		if (!this._layers) return;
+		var layer = this._layers.currentBaseLayer();
+		if (layer)
+			this._params['layer'] = layer.name;
+		this._update_href();
 	},
 
 	_round_point : function(point) {
@@ -97,5 +112,44 @@ L.Control.Permalink = L.Class.extend({
 		    params.lon == undefined) return;
 		this._centered = true;
 		this._map.setView(new L.LatLng(params.lat, params.lon), params.zoom);
+		if (params.layer && this._layers)
+			this._layers.chooseBaseLayer(params.layer);
 	}
 });
+
+L.Control.Layers.include({
+	chooseBaseLayer: function(name) {
+		var layer, obj;
+		for (var i in this._layers) {
+			if (!this._layers.hasOwnProperty(i))
+				continue;
+			obj = this._layers[i];
+			if (!obj.overlay && obj.name == name)
+				layer = obj.layer;
+		}
+		if (!layer || this._map.hasLayer(layer))
+			return;
+
+		for (var i in this._layers) {
+			if (!this._layers.hasOwnProperty(i))
+				continue;
+			obj = this._layers[i];
+			if (!obj.overlay && this._map.hasLayer(obj.layer))
+				this._map.removeLayer(obj.layer)
+		}
+		this._map.addLayer(layer)
+		this._update();
+	},
+
+	currentBaseLayer: function() {
+		for (var i in this._layers) {
+			if (!this._layers.hasOwnProperty(i))
+				continue;
+			var obj = this._layers[i];
+			if (obj.overlay) continue;
+			if (!obj.overlay && this._map.hasLayer(obj.layer))
+				return obj;
+		}
+	},
+});
+	
