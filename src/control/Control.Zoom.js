@@ -1,6 +1,12 @@
 L.Control.Zoom = L.Control.extend({
 	options: {
-		position: 'topleft'
+		position: 'topleft',
+		shiftClick: false,
+		shiftLevels: 4
+	},
+
+	initialize: function (options) {
+		L.Util.setOptions(this, options);
 	},
 
 	onAdd: function (map) {
@@ -18,10 +24,20 @@ L.Control.Zoom = L.Control.extend({
 		link.href = '#';
 		link.title = title;
 
+		var cb = function (e) {
+			if (this.options.shiftClick && e && e.shiftKey) {
+				var i;
+				for (i = 1; i < this.options.shiftLevels; i++) {
+					fn.call(context);
+				}
+			}
+			return fn.call(context);
+		};
+
 		L.DomEvent
 			.addListener(link, 'click', L.DomEvent.stopPropagation)
 			.addListener(link, 'click', L.DomEvent.preventDefault)
-			.addListener(link, 'click', fn, context);
+			.addListener(link, 'click', cb, this);
 
 		return link;
 	}
