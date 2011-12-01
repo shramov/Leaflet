@@ -23,6 +23,15 @@ L.Control.Permalink = L.Class.extend({
 		this._set_center(this._params);
 		this._update_layers();
 		this._update_center();
+
+		if (this.options.useAnchor && 'onhashchange' in window) {
+			var _this = this, fn = window.onhashchange;
+			window.onhashchange = function() {
+				_this._set_urlvars();
+				_this._set_center(_this._params, true);
+				if (fn) return fn();
+			}
+		}
 	},
 
 	getPosition: function() {
@@ -104,9 +113,9 @@ L.Control.Permalink = L.Class.extend({
 		return p;
 	},
 
-	_set_center: function(params)
+	_set_center: function(params, force)
 	{
-		if (this._centered) return;
+		if (!force && this._centered) return;
 		if (params.zoom == undefined ||
 		    params.lat == undefined ||
 		    params.lon == undefined) return;
