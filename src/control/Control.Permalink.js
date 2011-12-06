@@ -33,7 +33,7 @@ L.Control.Permalink = L.Class.extend({
 			window.onhashchange = function() {
 				_this._set_urlvars();
 				_this._set_center(_this._params, true);
-				_this._set_marker(_this._params, true);
+				_this._set_marker(_this._params);
 				if (fn) return fn();
 			}
 		}
@@ -153,12 +153,12 @@ L.Control.Permalink = L.Class.extend({
 			this._layers.chooseBaseLayer(params.layer);
 	},
 
-	_set_marker: function(params, force)
+	_set_marker: function(params)
 	{
-		if (!force && this._marker) return;
-		if (params.marker != '1' || !this._centered || !this.options.useMarker) return;
 		if (this._marker)
 			this._map.removeLayer(this._marker);
+		this._marker = null;
+		if (params.marker != '1' || !this._centered || !this.options.useMarker) return;
 		this._marker = new L.Marker(new L.LatLng(params.lat, params.lon), this.options.markerOptions);
 		this._map.addLayer(this._marker);
 	}
