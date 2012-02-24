@@ -5,10 +5,6 @@ L.Control.Zoom = L.Control.extend({
 		shiftLevels: 4
 	},
 
-	initialize: function (options) {
-		L.Util.setOptions(this, options);
-	},
-
 	onAdd: function (map) {
 		var className = 'leaflet-control-zoom',
 		    container = L.DomUtil.create('div', className);
@@ -25,7 +21,15 @@ L.Control.Zoom = L.Control.extend({
 		link.title = title;
 
 		var cb = function (e) {
-			if (this.options.shiftClick && e && e.shiftKey) {
+			function shiftPressed(e) {
+				if (e && e.shiftKey) { return true; }
+				if (document.layers && navigator.appName === "Netscape") {
+					return e.modifiers - 0 > 3;
+				}
+				return false;
+			}
+
+			if (this.options.shiftClick && shiftPressed(e)) {
 				var i;
 				for (i = 1; i < this.options.shiftLevels; i++) {
 					fn.call(context);
