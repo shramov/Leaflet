@@ -1,6 +1,6 @@
-L.Control.Permalink = L.Class.extend({
+L.Control.Permalink = L.Control.extend({
 	options: {
-		position: L.Control.Position.BOTTOM_LEFT,
+		position: "bottomleft",
 		useAnchor: true,
 		useMarker: true,
 		markerOptions: {},
@@ -37,13 +37,7 @@ L.Control.Permalink = L.Class.extend({
 				if (fn) return fn();
 			}
 		}
-	},
 
-	getPosition: function() {
-		return this.options.position;
-	},
-
-	getContainer: function() {
 		return this._container;
 	},
 
