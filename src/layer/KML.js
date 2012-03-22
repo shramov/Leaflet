@@ -29,7 +29,8 @@ L.Util.extend(L.KML, {
 		var el = xml.getElementsByTagName("Folder");
 		var layers = [];
 		for (var i = 0; i < el.length; i++) {
-			var l = this.parseFolder(xml, style);
+			if (!this._check_folder(el[i])) continue;
+			var l = this.parseFolder(el[i], style);
 			if (l) layers.push(l);
 		}
 		el = xml.getElementsByTagName('Placemark');
@@ -41,11 +42,13 @@ L.Util.extend(L.KML, {
 		return layers;
 	},
 
+	// Return false if e's first parent Folder is not [folder]
+	// - returns true if no parent Folders
 	_check_folder: function(e, folder) {
 		e = e.parentElement;
-		while (e && e.tagName != "Folder" && e != folder)
+		while (e && e.tagName != "Folder")
 			e = e.parentElement;
-		return e || e == folder;
+		return !e || e == folder;
 	},
 
 	parseStyle: function(xml) {
