@@ -5,12 +5,12 @@ L.KML = L.FeatureGroup.extend({
 		L.Util.setOptions(this, options);
 		this._kml = kml;
 		this._layers = {};
-		
+
 		if (kml) {
 			this.addKML(kml);
 		}
 	},
-	
+
 	addKML: function(kml) {
 		var req = new window.XMLHttpRequest();
 		req.open('GET', kml, false);
@@ -165,7 +165,12 @@ L.Util.extend(L.KML, {
 	parseCoords: function(xml) {
 		var el = xml.getElementsByTagName('coordinates');
 		var coords = [];
-		var text = el[0].childNodes[0].nodeValue.split(/[\s\n]+/);
+		// text might span many childnodes if more than 4096 chars
+		var text = "";
+		for (var i = 0; i < el[0].childNodes.length; i++) {
+			text = text + el[0].childNodes[i].nodeValue;
+		}
+		text = text.split(/[\s\n]+/);
 		for (var i = 0; i < text.length; i++) {
 			var ll = text[i].split(',');
 			if (ll.length < 2) continue;
