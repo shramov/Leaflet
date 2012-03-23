@@ -20,10 +20,14 @@ L.KML = L.FeatureGroup.extend({
 		var layers = L.KML.parseKML(req.responseXML);
 		for (var i = 0; i < layers.length; i++)
 			this.addLayer(layers[i]);
-	}
+		this.latLngs = L.KML.getLatLngs(req.responseXML);
+	},
+
+	latLngs: Array()
 });
 
 L.Util.extend(L.KML, {
+
 	parseKML: function(xml) {
 		var style = this.parseStyle(xml);
 		var el = xml.getElementsByTagName("Folder");
@@ -164,19 +168,7 @@ L.Util.extend(L.KML, {
 
 	parseCoords: function(xml) {
 		var el = xml.getElementsByTagName('coordinates');
-		var coords = [];
-		// text might span many childnodes if more than 4096 chars
-		var text = "";
-		for (var i = 0; i < el[0].childNodes.length; i++) {
-			text = text + el[0].childNodes[i].nodeValue;
-		}
-		text = text.split(/[\s\n]+/);
-		for (var i = 0; i < text.length; i++) {
-			var ll = text[i].split(',');
-			if (ll.length < 2) continue;
-			coords.push(new L.LatLng(ll[1], ll[0]));
-		}
-		return coords;
+		return this._read_coords(el[0]);
 	},
 
 	parseLineString: function(line, xml, options) {
@@ -208,6 +200,31 @@ L.Util.extend(L.KML, {
 		if (options.fillColor) options.fill = true;
 		if (polys.length == 1) return new L.Polygon(polys.concat(inner), options);
 		return new L.MultiPolygon(polys, options);
+	},
+
+	getLatLngs: function(xml) {
+		var el = xml.getElementsByTagName('coordinates');
+		var coords = [];
+		for (var j = 0; j < el.length; j++) {
+			// text might span many childnodes
+			coords = coords.concat(this._read_coords(el[j]));
+		}
+		return coords;
+	},
+
+	_read_coords: function(el) {
+		var text = "";
+		var coords = [];
+		for (var i = 0; i < el.childNodes.length; i++) {
+			text = text + el.childNodes[i].nodeValue;
+		}
+		text = text.split(/[\s\n]+/);
+		for (var i = 0; i < text.length; i++) {
+			var ll = text[i].split(',');
+			if (ll.length < 2) continue;
+			coords.push(new L.LatLng(ll[1], ll[0]));
+		}
+		return coords;
 	}
 
 });
