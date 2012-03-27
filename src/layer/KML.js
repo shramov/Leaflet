@@ -19,7 +19,12 @@ L.KML = L.FeatureGroup.extend({
 		if (req.status != 200) return;
 		var layers = L.KML.parseKML(req.responseXML);
 		for (var i = 0; i < layers.length; i++)
+		{
+			this.fire('addlayer', {
+				layer: layers[i]
+			});
 			this.addLayer(layers[i]);
+		}
 		this.latLngs = L.KML.getLatLngs(req.responseXML);
 	},
 
